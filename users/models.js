@@ -40,12 +40,9 @@ const generatedDeckSchema = mongoose.Schema({
 //Schema for individual card data (pulled from WordsAPI)
 const cardSchema = mongoose.Schema({
     word: {type: String, required: true},
-    results:[{
-        partOfSpeech: {type: String, default:''},
-        definition: {type: String, default:''},
-        usage: {type: String, default:''}
-    }]
-
+    partOfSpeech: {type: String, default:''},
+    definition: {type: String, default:''},
+    usage: {type: String, default:''}
 });
 
 
@@ -91,7 +88,9 @@ cardSchema.methods.serialize = function()
 {
     return {
         word: this.word,
-        results: this.results
+        partOfSpeech: this.partOfSpeech,
+        definition: this.definition,
+        usage: this.usage
     }
 };
 

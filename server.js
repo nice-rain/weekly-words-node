@@ -47,15 +47,98 @@ app.use(function (req, res, next) {
 // Middleware for Deck Generation
 //=======================================================
 
-const generateDeck = function (req, res, next)
+//Fills our entire deck with cards
+const fillDeck = function (newDeck)
 {
-    console.log('Generating Deck');
-
     //Words API call to fetch a random word
     const url = "https://wordsapiv1.p.rapidapi.com/words/?random=true"
 
     //API url for webster dictionary
     const websterDictionaryUrlBase = `https://dictionaryapi.com/api/v3/references/sd4/json/`;
+
+    const newCard = {};
+        
+    //Fetch a random word using our words API
+    fetch(url, {headers: {'X-RapidAPI-Key': process.env.WORDS_API_KEY}})
+    .then(res => res.json())
+    .then(json=> {
+
+        //Log our response
+        //console.log(`WordsAPI Fetch: \n`);
+        //console.log(json);
+        
+        //If there is no definition, pass the word to Webster's API
+        if(!json.results)
+        {
+            fetch(websterDictionaryUrlBase + `${json.word}?key=${process.env.WEBSTER_API_KEY}`)
+            .then(res => res.json())
+            .then(websterJson => {
+                //console.log(`Webster Fetch: \n`);
+                //console.log(websterJson);
+                if(websterJson.length > 0 && websterJson[0].meta)
+                {
+                    //console.log(`Definition of word is ${websterJson[0].shortdef}.`)
+                    newCard.word = json.word;
+                    newCard.partOfSpeech = websterJson[0].fl;
+
+                    //Clean up our shortdef
+                    let newDef = '';
+                    websterJson[0].shortdef.forEach(definition =>{
+                        newDef += `${definition}, `
+                    });
+
+                    //Remove the trailing comma
+                    newDef = newDef.slice(0, -2);
+
+                    console.log(`Compiled Definition is: ${newDef}`);
+
+                    newCard.definition = newDef;
+
+                    newDeck.cards.push(newCard);
+                    //console.log(newDeck.cards);
+
+                }
+            })
+        }   
+        
+        //If there is a definition, we should add it to our card array
+        else{
+            newCard.word = json.word;
+            newCard.partOfSpeech = json.results[0].partOfSpeech;
+            newCard.definition = json.results[0].definition;
+            if(json.results[0].examples)
+            {
+                newCard.usage = json.results[0].examples[0];
+            }
+            newDeck.cards.push(newCard);
+
+            //console.log(newDeck.cards);
+        }
+        
+        
+
+        //If statement to check if we've completely filled our deck
+        if(newDeck.cards.length < 20)
+        {
+            //recursive function - recall
+            fillDeck(newDeck); 
+        }
+        else{
+            console.log('deck generation complete!!!!');
+            console.log(newDeck);
+        }
+
+
+    })
+    .catch(err => {
+        console.log(err);
+        return res.status(500).send('internal server error');
+    });    
+}
+
+const generateDeck = function (req, res, next)
+{
+    console.log('Generating Deck');
 
     //Setup our defaults for mongoose
     const newGeneratedDeck = {};
@@ -68,53 +151,15 @@ const generateDeck = function (req, res, next)
         //Setup our week number and our date created
         newGeneratedDeck.week = count + 1;
         newGeneratedDeck.created = new Date();
-                
-        //Fetch a random word using our words API
-        return fetch(url, {headers: {'X-RapidAPI-Key': process.env.WORDS_API_KEY}});
+        newGeneratedDeck.cards = [];
+
+        //Call fillDeck to asynchronously fill the entire deck of cards
+        fillDeck(newGeneratedDeck);
     })
-    .then(res => res.json())
-    .then(json=> {
-
-        //Log our response
-        console.log(`WordsAPI Fetch: \n`);
-        console.log(json);
-
-        //If there is no definition, pass the word to Webster's API
-        if(!json.results)
-        {
-            fetch(websterDictionaryUrlBase + `${json.word}?key=${process.env.WEBSTER_API_KEY}`)
-            .then(res => res.json())
-            .then(websterJson => {
-                console.log(`Webster Fetch: \n`);
-                console.log(websterJson);
-                if(websterJson[0].meta)
-                {
-                    console.log(`Definition of word is ${websterJson[0].shortdef}.`)
-                }
-            })
-        }
-
-        //If there is a definition, we should add it to our card array
-        else{
-
-        } 
-    })    
     .catch(error=>{
         console.log(`Error: ${error}`);
         return res.status(500).send('request failed');
     });
-
-    //Feed that word into the oxford dictionary to pull usage and definitions
-    
-
-
-    //Logical Steps
-    //Repeat 20 Times:
-    //1. Get random word
-    //2. Get definition of word
-    //3. insert card into mongoose
-
-
     next();
 }
 //=======================================================
