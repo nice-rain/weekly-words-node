@@ -126,9 +126,10 @@ const fillDeck = function (newDeck)
         }
     })
     .catch(err => {
+        console.log(err);
         console.log('Deck Generation Failed -  Retrying');
         generateDeck();
-        console.log(err);
+        
     });    
 }
 
