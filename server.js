@@ -22,7 +22,7 @@ const { DATABASE_URL, PORT} = require('./config');
 
 
 //Import our schemas
-const {User, Decks, GeneratedDecks, Cards} = require("./users/models");
+const {User, Decks, GeneratedDecks} = require("./users/models");
 
 //Use our json parser (this is required to parse req.body)
 app.use(express.json());
@@ -44,7 +44,7 @@ app.use(function (req, res, next) {
   });
 
 //=======================================================
-// Middleware for Deck Generation
+// Deck Generation
 //=======================================================
 
 //Fills our entire deck with cards
@@ -62,22 +62,15 @@ const fillDeck = function (newDeck)
     fetch(url, {headers: {'X-RapidAPI-Key': process.env.WORDS_API_KEY}})
     .then(res => res.json())
     .then(json=> {
-
-        //Log our response
-        //console.log(`WordsAPI Fetch: \n`);
-        //console.log(json);
-        
+       
         //If there is no definition, pass the word to Webster's API
         if(!json.results)
         {
             fetch(websterDictionaryUrlBase + `${json.word}?key=${process.env.WEBSTER_API_KEY}`)
             .then(res => res.json())
             .then(websterJson => {
-                //console.log(`Webster Fetch: \n`);
-                //console.log(websterJson);
                 if(websterJson.length > 0 && websterJson[0].meta)
                 {
-                    //console.log(`Definition of word is ${websterJson[0].shortdef}.`)
                     newCard.word = json.word;
                     newCard.partOfSpeech = websterJson[0].fl;
 
@@ -95,7 +88,6 @@ const fillDeck = function (newDeck)
                     newCard.definition = newDef;
 
                     newDeck.cards.push(newCard);
-                    //console.log(newDeck.cards);
 
                 }
             })
@@ -112,11 +104,8 @@ const fillDeck = function (newDeck)
             }
             newDeck.cards.push(newCard);
 
-            //console.log(newDeck.cards);
         }
         
-        
-
         //If statement to check if we've completely filled our deck
         if(newDeck.cards.length < 20)
         {
@@ -125,18 +114,26 @@ const fillDeck = function (newDeck)
         }
         else{
             console.log('deck generation complete!!!!');
-            console.log(newDeck);
+            //Add our deck to our database
+            GeneratedDecks.create(newDeck)
+            .then(created => {
+                console.log(`Deck Successfull Created: ${created.id}`)
+            })
+            .catch(err => {
+                return Reject(err);
+            });
         }
-
-
     })
     .catch(err => {
         console.log(err);
-        return res.status(500).send('internal server error');
     });    
 }
 
-const generateDeck = function (req, res, next)
+// Generate deck is called on an interval to run every 7 days.
+// It adds all basic information before calling fillDeck.
+// FillDeck will continually add cards to the deck until we have 20.
+// Once 20 are added, filldeck will push the deck into the database.
+const generateDeck = function (req, res)
 {
     console.log('Generating Deck');
 
@@ -160,13 +157,13 @@ const generateDeck = function (req, res, next)
         console.log(`Error: ${error}`);
         return res.status(500).send('request failed');
     });
-    next();
 }
+
 //=======================================================
-// GET Endpoints
+// GET Endpoint - Creates new deck on first login
 //=======================================================
 
-app.get('/', generateDeck, (req, res) => {
+app.get('/', (req, res) => {
     return res.status(200).json({message: 'Get Endpoint Hit!'});
 });
 
@@ -197,6 +194,12 @@ app.use('*', (req, res) => {
         }
         server = app.listen(port, () => {
           console.log(`Weekly Words Node app is listening on port ${port}`);
+
+            const MS_PER_WEEK = 604800000;
+
+          //Set an interval to create a new deck every 7 days
+          setInterval(generateDeck, /*120000*/ MS_PER_WEEK);
+
           resolve();
         })
           .on('error', err => {

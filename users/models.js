@@ -34,7 +34,12 @@ const deckSchema = mongoose.Schema({
 const generatedDeckSchema = mongoose.Schema({
     week: {type: Number, required: true},
     created: {type: Date, required: true},
-    cards: [{type: Schema.Types.ObjectId, ref:'Card'}]
+    cards: [{
+        word: {type: String, required: true},
+        partOfSpeech: {type: String, default:''},
+        definition: {type: String, default:''},
+        usage: {type: String, default:''} 
+    }]
 });
 
 //Schema for individual card data (pulled from WordsAPI)
@@ -78,19 +83,10 @@ deckSchema.methods.serialize = function()
 generatedDeckSchema.methods.serialize = function()
 {
     return {
+        id: this._id,
         week: this.week,
         created: this.created,
         cards: this.cards
-    }
-};
-
-cardSchema.methods.serialize = function()
-{
-    return {
-        word: this.word,
-        partOfSpeech: this.partOfSpeech,
-        definition: this.definition,
-        usage: this.usage
     }
 };
 
@@ -108,8 +104,5 @@ const Decks = mongoose.model('Decks', deckSchema);
 //Collection for generated decks (on the server-side)
 const GeneratedDecks = mongoose.model('GeneratedDecks', generatedDeckSchema);
 
-//Collection for cards
-const Cards = mongoose.model('Cards', cardSchema);
-
 //Export our schemas
-module.exports = {User, Decks, GeneratedDecks, Cards};
+module.exports = {User, Decks, GeneratedDecks};
