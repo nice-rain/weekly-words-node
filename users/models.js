@@ -14,14 +14,23 @@ const Schema = mongoose.Schema;
 const userSchema = mongoose.Schema({
     username: {type: String, required: true, unique: true},
     password: {type: String, required: true},
-    name: {type: String, default: ''},
-    decks: [{type: Schema.Types.ObjectId, ref: 'Decks'}]
+    name: {type: String, default: ''}/*,
+    decks: [{type: Schema.Types.ObjectId, ref: 'Decks'}]*/
 });
+
+userSchema.methods.validatePassword = function(password) {
+    return bcrypt.compare(password, this.password);
+}
+
+userSchema.statics.hashPassword = function(password) {
+    return bcrypt.hash(password, 10);
+}
 
 
 //Schema that contains deck information and links to generated deck
 const deckSchema = mongoose.Schema({
-    deckName: {type: String, required: true},
+    user: {type: String, required: true}, //username of user making deck
+    deckName: {type: String, required: true}, //name of deck (should be Week n)
     deckReviewTotal: {type: Number, default: 0},
     deckHighestAccuracy: {type: Number, default:0},
     deckAverageAccuracy: {type: Number, default:0},
@@ -60,8 +69,8 @@ userSchema.methods.serialize = function()
 {
     return {
         username: this.username || '',
-        name: this.name || '',
-        decks: this.decks || []
+        name: this.name || ''//,
+        //decks: this.decks || []
     }
 };
 
@@ -69,6 +78,8 @@ userSchema.methods.serialize = function()
 deckSchema.methods.serialize = function()
 {
     return {
+        user: this.user,
+        id: this._id,
         deckName: this.deckName || '',
         deckReviewTotal: this.deckReviewTotal || 0,
         deckHighestAccuracy: this.deckHighestAccuracy || 0,

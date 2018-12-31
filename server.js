@@ -6,6 +6,9 @@ const mongoose = require('mongoose');
 const morgan = require('morgan');
 const fetch = require('node-fetch');
 
+const { router: usersRouter } = require('./users');
+const { router: authRouter, localStrategy, jwtStrategy } = require('./auth');
+
 //reads .env file
 require('dotenv').config();
 
@@ -42,6 +45,22 @@ app.use(function (req, res, next) {
     }
     next();
   });
+
+
+//=======================================================
+//JWT
+//=======================================================  
+
+//Authentication
+passport.use(localStrategy);
+passport.use(jwtStrategy);
+
+//Tells our app to use users and authentication routes
+app.use('/api/users/', usersRouter);
+app.use('/api/auth/', authRouter);
+
+//Middleware for authenticating users
+const jwtAuth = passport.authenticate('jwt', {session: false});
 
 //=======================================================
 // Deck Generation
@@ -167,12 +186,21 @@ const generateDeck = function (req, res)
 // GET Endpoint - Creates new deck on first login
 //=======================================================
 
-app.get('/', (req, res) => {
+// A protected endpoint which needs a valid JWT to access it
+app.get('/api/protected', jwtAuth, (req, res) => {
+  
+    console.log(req.user.username);
+    res.status(204).send();
+  });
+
+
+//Protected endpoint that will return all decks for a given user
+app.get('/api/decks', jwtAuth, (req, res) => {
 
     //Get our number of generated decks
     GeneratedDecks.find()
     .then(genDecks =>{
-        Decks.countDocuments()
+        Decks.countDocuments({user: req.user.username})
         .then(deckCount =>{
             console.log(`Deck Count is ${deckCount}`);
             console.log(`Generated Deck Count is ${genDecks.length}`);
@@ -188,6 +216,7 @@ app.get('/', (req, res) => {
                     console.log(`adding deck ${i}`);
                     //Add all values for our new deck
                     const newDeck = {
+                        user: req.user.username,
                         deckName: `Week ${genDecks[i].week}`,
                         generatedDeck: genDecks[i]._id
                     };
@@ -201,8 +230,7 @@ app.get('/', (req, res) => {
                 //lastly, we need to add these decks into our deck array
                 Decks.insertMany(newDecks)
                 .then(inserted =>{
-                    console.log(inserted);
-                    Decks.find()
+                    Decks.find({user: req.user.username})
                     .populate('generatedDeck')
                     .then(allDecks =>{
                         return res.status(200).json(allDecks.map(individualDeck => individualDeck.serialize()));
@@ -216,7 +244,7 @@ app.get('/', (req, res) => {
             }
             else{
                 //Don't add a new deck, return decks
-                Decks.find()
+                Decks.find({user: req.user.username})
                 .populate('generatedDeck')
                 .then(allDecks =>{
                     return res.status(200).json(allDecks.map(individualDeck => individualDeck.serialize()));
@@ -267,7 +295,7 @@ app.use('*', (req, res) => {
             const MS_PER_WEEK = 604800000;
 
           //Set an interval to create a new deck every 7 days
-          setInterval(generateDeck, /*120000*/ 300000);
+          setInterval(generateDeck, MS_PER_WEEK);
 
           resolve();
         })
