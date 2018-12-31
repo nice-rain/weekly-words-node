@@ -95,6 +95,7 @@ const fillDeck = function (newDeck)
         
         //If there is a definition, we should add it to our card array
         else{
+            console.log(`Word Added: ${json.word}`);
             newCard.word = json.word;
             newCard.partOfSpeech = json.results[0].partOfSpeech;
             newCard.definition = json.results[0].definition;
@@ -125,6 +126,8 @@ const fillDeck = function (newDeck)
         }
     })
     .catch(err => {
+        console.log('Deck Generation Failed -  Retrying');
+        generateDeck();
         console.log(err);
     });    
 }
@@ -164,7 +167,72 @@ const generateDeck = function (req, res)
 //=======================================================
 
 app.get('/', (req, res) => {
-    return res.status(200).json({message: 'Get Endpoint Hit!'});
+
+    //Get our number of generated decks
+    GeneratedDecks.find()
+    .then(genDecks =>{
+        Decks.countDocuments()
+        .then(deckCount =>{
+            console.log(`Deck Count is ${deckCount}`);
+            console.log(`Generated Deck Count is ${genDecks.length}`);
+            if(deckCount < genDecks.length)
+            {
+                const newDecks = [];
+                console.log('add new decks');
+                
+                
+                //Add new decks here
+                for (let i = deckCount; i < genDecks.length; i++)
+                {
+                    console.log(`adding deck ${i}`);
+                    //Add all values for our new deck
+                    const newDeck = {
+                        deckName: `Week ${genDecks[i].week}`,
+                        generatedDeck: genDecks[i]._id
+                    };
+                    
+                    //push it into our newDecks array (to be added to decks)
+                    newDecks.push(newDeck);
+                }
+
+
+                console.log('insert new decks');
+                //lastly, we need to add these decks into our deck array
+                Decks.insertMany(newDecks)
+                .then(inserted =>{
+                    console.log(inserted);
+                    Decks.find()
+                    .populate('generatedDeck')
+                    .then(allDecks =>{
+                        return res.status(200).json(allDecks.map(individualDeck => individualDeck.serialize()));
+                    })
+                })
+                .catch(err=>{
+                    console.log(err);
+                    return res.status(500).message('Error when inserting new decks for user');
+                })
+
+            }
+            else{
+                //Don't add a new deck, return decks
+                Decks.find()
+                .populate('generatedDeck')
+                .then(allDecks =>{
+                    return res.status(200).json(allDecks.map(individualDeck => individualDeck.serialize()));
+                })
+            }
+        })
+        .catch(err => {
+            return res.status(500).send('internal server error');
+        })
+    })
+    .catch(err =>{
+        console.log(err);
+        return res.status(500).send('internal server error');
+    })
+
+    //fallback approach
+    //return res.status(200).json({message: 'Get Endpoint Hit!'});
 });
 
 //=======================================================
@@ -198,7 +266,7 @@ app.use('*', (req, res) => {
             const MS_PER_WEEK = 604800000;
 
           //Set an interval to create a new deck every 7 days
-          setInterval(generateDeck, /*120000*/ MS_PER_WEEK);
+          setInterval(generateDeck, /*120000*/ 300000);
 
           resolve();
         })
