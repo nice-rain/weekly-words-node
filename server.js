@@ -258,11 +258,35 @@ app.get('/api/decks', jwtAuth, (req, res) => {
     .catch(err =>{
         console.log(err);
         return res.status(500).send('internal server error');
-    })
-
-    //fallback approach
-    //return res.status(200).json({message: 'Get Endpoint Hit!'});
+    });
 });
+
+//=======================================================
+// PUT Endpoint
+//=======================================================
+
+//This put endpoint allows us to update deck stats
+app.put('/api/decks/:id', jwtAuth, (req, res) =>{
+    if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
+        res.status(400).json({
+          error: 'Request path id and request body id values must match'
+        });
+      }
+    
+      const updated = {};
+      const updateableFields = ['deckReviewTotal', 'deckHighestAccuracy', 'deckAverageAccuracy', 'deckFastestTime', 'deckAverageTime'];
+      updateableFields.forEach(field => {
+        if (field in req.body) {
+          updated[field] = req.body[field];
+        }
+      });
+    
+      Decks
+        .findByIdAndUpdate(req.params.id, { $set: updated }, { new: true })
+        .then(updatedDeck => res.status(204).end())
+        .catch(err => res.status(500).json({ message: 'Something went wrong withg update' }));
+});
+
 
 //=======================================================
 // Catch Endpoints
