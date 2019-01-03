@@ -274,7 +274,7 @@ app.put('/api/decks/:id', jwtAuth, (req, res) =>{
       }
     
       const updated = {};
-      const updateableFields = ['deckReviewTotal', 'deckHighestAccuracy', 'deckAverageAccuracy', 'deckFastestTime', 'deckAverageTime'];
+      const updateableFields = ['deckReviewTotal', 'deckHighestAccuracy', 'deckLatestAccuracy', 'deckFastestTime', 'deckLatestTime'];
       updateableFields.forEach(field => {
         if (field in req.body) {
           updated[field] = req.body[field];

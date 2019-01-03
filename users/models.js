@@ -33,9 +33,9 @@ const deckSchema = mongoose.Schema({
     deckName: {type: String, required: true}, //name of deck (should be Week n)
     deckReviewTotal: {type: Number, default: 0},
     deckHighestAccuracy: {type: Number, default:0},
-    deckAverageAccuracy: {type: Number, default:0},
+    deckLatestAccuracy: {type: Number, default:0},
     deckFastestTime: {type: Number, default:0},
-    deckAverageTime: {type: Number, default:0},
+    deckLatestTime: {type: Number, default:0},
     generatedDeck: {type: Schema.Types.ObjectId, ref: 'GeneratedDecks'}
 });
 
@@ -49,14 +49,6 @@ const generatedDeckSchema = mongoose.Schema({
         definition: {type: String, default:''},
         usage: {type: String, default:''} 
     }]
-});
-
-//Schema for individual card data (pulled from WordsAPI)
-const cardSchema = mongoose.Schema({
-    word: {type: String, required: true},
-    partOfSpeech: {type: String, default:''},
-    definition: {type: String, default:''},
-    usage: {type: String, default:''}
 });
 
 
@@ -83,9 +75,9 @@ deckSchema.methods.serialize = function()
         deckName: this.deckName || '',
         deckReviewTotal: this.deckReviewTotal || 0,
         deckHighestAccuracy: this.deckHighestAccuracy || 0,
-        deckAverageAccuracy: this.deckAverageAccuracy || 0,
+        deckLatestAccuracy: this.deckLatestAccuracy || 0,
         deckFastestTime: this.deckFastestTime || 0,
-        deckAverageTime: this.deckAverageTime || 0,
+        deckLatestTime: this.deckLatestTime || 0,
         generatedDeck: this.generatedDeck 
     }
 };
