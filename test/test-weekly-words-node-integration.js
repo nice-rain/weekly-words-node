@@ -103,7 +103,7 @@ describe('Weekly Words Integration Tests', function(){
 
     //Runs before anything else, runs our server
     before(function() {
-      return runServer(TEST_DATABASE_URL);
+      return runServer(process.env.TEST_DATABASE_URL);
     });
     
     //Called when we have completed our tests
@@ -121,7 +121,7 @@ describe('Auth endpoint tests', function () {
   const name = 'Example';
 
   before(function () {
-    return runServer(TEST_DATABASE_URL);
+    return runServer(process.env.TEST_DATABASE_URL);
   });
 
   after(function () {
@@ -146,7 +146,7 @@ describe('Auth endpoint tests', function () {
     it('Should reject requests with no credentials', function () {
       return chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/ww/api/auth/login')
         .then(() =>{
           //expect.fail(null, null, 'Request should not succeed');
           const res = err.response;
@@ -161,7 +161,7 @@ describe('Auth endpoint tests', function () {
     it('Should reject requests with incorrect usernames', function () {
       return chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/ww/api/auth/login')
         .send({ username: 'wrongUsername', password })        
         .then(() => {
           //expect.fail(null, null, 'Request should not succeed');
@@ -177,7 +177,7 @@ describe('Auth endpoint tests', function () {
     it('Should reject requests with incorrect passwords', function () {
       return chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/ww/api/auth/login')
         .send({ username, password: 'wrongPassword' })
         .then(() =>{
           
@@ -194,7 +194,7 @@ describe('Auth endpoint tests', function () {
     it('Should return a valid auth token', function () {
       return chai
         .request(app)
-        .post('/api/auth/login')
+        .post('/ww/api/auth/login')
         .send({ username, password })
         .then(res => {
           expect(res).to.have.status(200);
@@ -212,7 +212,7 @@ describe('Auth endpoint tests', function () {
     });
   });
 
-  describe('/api/auth/refresh', function () {
+  describe('/ww/api/auth/refresh', function () {
     it('Should reject requests with no credentials', function () {
       return chai
         .request(app)
@@ -243,7 +243,7 @@ describe('Auth endpoint tests', function () {
 
       return chai
         .request(app)
-        .post('/api/auth/refresh')
+        .post('/ww/api/auth/refresh')
         .set('Authorization', `Bearer ${token}`)
         .then(() => {
           const res = err.response;
@@ -275,7 +275,7 @@ describe('Auth endpoint tests', function () {
 
       return chai
         .request(app)
-        .post('/api/auth/refresh')
+        .post('/ww/api/auth/refresh')
         .set('authorization', `Bearer ${token}`)
         .then(() =>{
           const res = err.response;
@@ -307,7 +307,7 @@ describe('Auth endpoint tests', function () {
 
       return chai
         .request(app)
-        .post('/api/auth/refresh')
+        .post('/ww/api/auth/refresh')
         .set('authorization', `Bearer ${token}`)
         .then(res => {
           expect(res).to.have.status(200);
@@ -331,7 +331,7 @@ describe('Auth endpoint tests', function () {
 // Registration Tests
 //=======================================================
 
-describe('/api/user', function() {
+describe('/ww/api/user', function() {
   const username = 'exampleUser';
   const password = 'examplePass';
   const name = 'Example';
@@ -340,7 +340,7 @@ describe('/api/user', function() {
   const nameB = 'ExampleB';
 
   before(function() {
-    return runServer(TEST_DATABASE_URL);
+    return runServer(process.env.TEST_DATABASE_URL);
   });
 
   after(function() {
@@ -353,7 +353,7 @@ describe('/api/user', function() {
     return User.remove({});
   });
 
-  describe('/api/users', function() {
+  describe('/ww/api/users', function() {
     describe('POST', function() {
       it('Should reject users with missing username', function() {
         return chai
@@ -381,7 +381,7 @@ describe('/api/user', function() {
       it('Should reject users with missing password', function() {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/ww/api/users')
           .send({
             username,
             name
@@ -402,7 +402,7 @@ describe('/api/user', function() {
       it('Should reject users with non-string username', function() {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/ww/api/users')
           .send({
             username: 1234,
             password,
@@ -428,7 +428,7 @@ describe('/api/user', function() {
       it('Should reject users with non-string password', function() {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/ww/api/users')
           .send({
             username,
             password: 1234,
@@ -453,7 +453,7 @@ describe('/api/user', function() {
       it('Should reject users with non-string name', function() {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/ww/api/users')
           .send({
             username,
             password,
@@ -478,7 +478,7 @@ describe('/api/user', function() {
       it('Should reject users with empty username', function() {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/ww/api/users')
           .send({
             username: '',
             password,
@@ -537,7 +537,7 @@ describe('/api/user', function() {
       it('Should create a new user', function() {
         return chai
           .request(app)
-          .post('/api/users')
+          .post('/ww/api/users')
           .send({
             username,
             password,
@@ -581,7 +581,7 @@ describe('Generated Deck API resource', function() {
     const name = 'Example';  
   
     before(function() {
-      return runServer(TEST_DATABASE_URL);
+      return runServer(process.env.TEST_DATABASE_URL);
     });
   
     beforeEach(function() {
@@ -627,7 +627,7 @@ describe('Generated Deck API resource', function() {
         );
   
         return chai.request(app)
-          .get('/api/decks')
+          .get('/ww/api/decks')
           .set('Authorization', `Bearer ${token}`)
           .then(function(_res) {
             res = _res;
@@ -650,7 +650,7 @@ describe('Decks API resource', function() {
     const name = 'Example';  
   
     before(function() {
-      return runServer(TEST_DATABASE_URL);
+      return runServer(process.env.TEST_DATABASE_URL);
     });
   
     beforeEach(function() {
@@ -696,7 +696,7 @@ describe('Decks API resource', function() {
         );
   
         return chai.request(app)
-          .get('/api/decks')
+          .get('/ww/api/decks')
           .set('Authorization', `Bearer ${token}`)
           .then(function(_res) {
             res = _res;
@@ -727,7 +727,7 @@ describe('Decks API resource', function() {
           }
         );
         return chai.request(app)
-          .get('/api/decks')
+          .get('/ww/api/decks')
           .set('Authorization', `Bearer ${token}`)
           .then(function(res) {
             expect(res).to.have.status(200);
@@ -786,7 +786,7 @@ describe('Decks API resource', function() {
             .then(function(deck) {
               updateData.id = deck.id;
               return chai.request(app)
-                .put(`/api/decks/${deck.id}`)
+                .put(`/ww/api/decks/${deck.id}`)
                 .set('Authorization', `Bearer ${token}`)
                 .send(updateData);
             })
