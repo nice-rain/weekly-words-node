@@ -20,10 +20,6 @@ mongoose.Promise = global.Promise;
 //Mongoose fix deprecation warning
 mongoose.set('useFindAndModify', false);
 
-//Include our database URL and port
-const { DATABASE_URL, PORT} = require('./config');
-
-
 //Import our schemas
 const {User, Decks, GeneratedDecks} = require("./users/models");
 
@@ -190,6 +186,7 @@ const generateDeck = function (req, res)
 app.get('/api/protected', jwtAuth, (req, res) => {
   
     console.log(req.user.username);
+    //generateDeck();
     res.status(204).send();
   });
 
@@ -306,7 +303,7 @@ app.use('*', (req, res) => {
   let server;
   
   //Start our server
-  function runServer(databaseUrl, port = PORT) {
+  function runServer(databaseUrl, port = process.env.PORT) {
     return new Promise((resolve, reject) => {
       mongoose.set('useCreateIndex', true);
       mongoose.connect(databaseUrl, {useNewUrlParser:true}, err => {
@@ -349,7 +346,7 @@ app.use('*', (req, res) => {
   // if server.js is called directly (aka, with `node server.js`), this block
   // runs. but we also export the runServer command so other code (for instance, test code) can start the server as needed.
   if (require.main === module) {
-    runServer(DATABASE_URL).catch(err => console.error(err));
+    runServer(process.env.DATABASE_URL).catch(err => console.error(err));
   }
   
   //Export our modules for testing
