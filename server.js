@@ -52,8 +52,8 @@ passport.use(localStrategy);
 passport.use(jwtStrategy);
 
 //Tells our app to use users and authentication routes
-app.use('/api/users/', usersRouter);
-app.use('/api/auth/', authRouter);
+app.use('/ww/api/users/', usersRouter);
+app.use('/ww/api/auth/', authRouter);
 
 //Middleware for authenticating users
 const jwtAuth = passport.authenticate('jwt', {session: false});
@@ -183,7 +183,7 @@ const generateDeck = function (req, res)
 //=======================================================
 
 // A protected endpoint which needs a valid JWT to access it
-app.get('/api/protected', jwtAuth, (req, res) => {
+app.get('/ww/api/protected', jwtAuth, (req, res) => {
   
     console.log(req.user.username);
     //generateDeck();
@@ -192,7 +192,7 @@ app.get('/api/protected', jwtAuth, (req, res) => {
 
 
 //Protected endpoint that will return all decks for a given user
-app.get('/api/decks', jwtAuth, (req, res) => {
+app.get('/ww/api/decks', jwtAuth, (req, res) => {
 
     //Get our number of generated decks
     GeneratedDecks.find()
@@ -263,7 +263,7 @@ app.get('/api/decks', jwtAuth, (req, res) => {
 //=======================================================
 
 //This put endpoint allows us to update deck stats
-app.put('/api/decks/:id', jwtAuth, (req, res) =>{
+app.put('/ww/api/decks/:id', jwtAuth, (req, res) =>{
     if (!(req.params.id && req.body.id && req.params.id === req.body.id)) {
         res.status(400).json({
           error: 'Request path id and request body id values must match'
