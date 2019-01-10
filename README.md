@@ -3,6 +3,8 @@
 ## Summary
 This is the node.js back-end of the Weekly Words application. It provides an API for the user to register, login, and review weekly generated decks of cards. The back-end runs on a weekly function timer that will automatically fetch 20 random words and their definitions using WordsAPI. Unfortunately, not all words from WordsAPI have definitions associated with them. If this occurs, the back-end will automatically query the definition from the Webster Dictionary API.
 
+:exclamation: This is required to run the [Weekly Words](https://github.com/nice-rain/weekly-words-redux) react-redux front-end locally.
+
 ## Built With
 * node.js
 * MongoDB
